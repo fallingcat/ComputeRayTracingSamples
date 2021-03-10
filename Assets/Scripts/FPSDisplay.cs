@@ -26,9 +26,6 @@ public class FPSDisplay : MonoBehaviour
 		style.normal.textColor = m_TextColor;
 		float msec = deltaTime * 1000.0f;
 		float fps = 1.0f / deltaTime;
-        //string text = string.Format("{0:0.0} ms ({1:0.} fps , Step : {2:00.00}\nPlayer HP : {3})", msec, fps, Game.m_Step, DungeonCraftGame.CurrentStage.GetPlayer(0).ActorHP.CurrentHP);
-        //GUI.Label(rect, text, style);        
-
         string text = string.Format("{0:0.0} ms ({1:0.} fps)", msec, fps);
         GUI.Label(rect, text, style);        
     }
