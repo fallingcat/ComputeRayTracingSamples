@@ -1,0 +1,67 @@
+﻿
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct SphereData
+{
+	float3 Center;
+	float Radius;
+	int MaterialType;
+	float3 MaterialAlbedo;
+	float4 MaterialData;
+};
+
+StructuredBuffer<SphereData> WorldData;
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+float4 TargetSize;
+
+#include "Types.cginc"
+#include "Utility.cginc"
+#include "Ray.cginc"
+#include "Material.cginc"
+#include "Sphere.cginc"
+#include "World.cginc"
+#include "Camera.cginc"
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+	float2 ViewportSize = float2(2.0, 2.0);
+	float FocalLength = 1.0f;
+
+	float3 Origin = float3(0, 0, 0);
+	float3 Horizontal = float3(ViewportSize.x, 0, 0);
+	float3 Vertical = float3(0, ViewportSize.y, 0);
+	float3 LowerLeftCorner = Origin - (Horizontal / 2.0) - (Vertical / 2.0) - float3(0, 0, FocalLength);
+	
+	World W = _World(int(TargetSize.w));
+	
+	float3 LookFrom = float3(13, 2, 3);
+	float3 LookAt = float3(0, 0, 0);
+	float3 VUp = float3(0, 1, 0);
+	float Dist2Focus = 10.0;
+	float Aperture = 0.1;
+	Camera Cam = _Camera(LookFrom, LookAt, VUp, 25, TargetSize.x / TargetSize.y, Aperture, Dist2Focus);
+
+	float3 Color = float3(0, 0, 0);
+
+	for (int s = 0; s < AA_SAMPLES; s++)
+	{
+		float2 Seed = float2(id.xy) / TargetSize.xy;
+		float Offset = float(s) / float(AA_SAMPLES);
+
+		float2 Jitter = float2(Random(Seed), Random(Seed + Offset));
+		float2 UV = (float2(id.xy) + Jitter) / TargetSize.xy;
+
+		Ray R = Camera_GetRay(Cam, UV);
+		Color += Ray_Color(R, W, UV);
+	}
+	Color /= float(AA_SAMPLES);
+	Color = clamp(Color, 0, 1);
+	Color = pow(Color, 1.0/1.8);
+	
+	Result[id.xy] = float4(Color, 1);
+}
