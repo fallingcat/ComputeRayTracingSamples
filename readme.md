@@ -1,7 +1,9 @@
 # Compute Ray Tracing Samples
 
-This is an Unity sample project which collects ray tracing samples which are based on compute shader.
-
+This project collects multiple compute shader based ray tracing samples for Unity.
+- Ray Tracing in One Weekend
+- Ray Query
+- Hybrid Rendering
 
 # Samples
 
