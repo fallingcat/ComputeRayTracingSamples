@@ -1,4 +1,4 @@
-# Compute Ray Tracing Samples
+# Overview
 
 This project collects multiple compute shader based ray tracing samples for Unity.
 - Ray Tracing in One Weekend
