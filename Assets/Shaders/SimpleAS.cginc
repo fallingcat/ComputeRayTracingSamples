@@ -1,9 +1,10 @@
 ﻿
-SimpleAccelerationStructure _SimpleAccelerationStructure(int num)
+SimpleAccelerationStructure _SimpleAccelerationStructure(int num, StructuredBuffer<SphereData> data)
 {
 	SimpleAccelerationStructure SAS;
 
 	SAS.NumObjects = num;
+	SAS.ASData = data;
 	
 	return SAS;
 }
@@ -16,7 +17,7 @@ bool SimpleAccelerationStructure_Hit(SimpleAccelerationStructure sas, Ray r, flo
 
 	for (int i = 0; i < sas.NumObjects; i++)
 	{
-		Sphere S = _Sphere(SimpleAccelerationStructureData[i].Center, SimpleAccelerationStructureData[i].Radius, _Material(SimpleAccelerationStructureData[i].MaterialType, SimpleAccelerationStructureData[i].MaterialAlbedo, SimpleAccelerationStructureData[i].MaterialData.x));
+		Sphere S = _Sphere(sas.ASData[i].Center, sas.ASData[i].Radius, _Material(sas.ASData[i].MaterialType, sas.ASData[i].MaterialAlbedo, sas.ASData[i].MaterialData.x));
 		if (Sphere_Hit(S, r, t_min, ClosestT, TempRec))
 		{
 			bHitAnything = true;

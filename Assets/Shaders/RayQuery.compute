@@ -2,8 +2,8 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSMain
 
-#define MAX_RAY_RECURSIVE_DEPTH 6
-#define AA_SAMPLES				16
+#define SHADOW_SAMPLES			8
+#define AA_SAMPLES				8
 
 #include "Types.cginc"
 #include "Utility.cginc"
@@ -12,48 +12,50 @@
 #include "Sphere.cginc"
 #include "SimpleAS.cginc"
 #include "Camera.cginc"
-
+#include "RayQuery.cginc"
 
 StructuredBuffer<SphereData> SimpleAccelerationStructureData;
 RWTexture2D<float4> Result;
 
 float4 TargetSize;
+float4 PointLightPos;
+float4 PointLightColor;
 
 float3 Ray_Color(Ray r, SimpleAccelerationStructure sas, float2 uv)
 {
 	Sphere Sph;
 	HitRecord Rec = _HitRecord();
 	Ray R = r;
-	float3 Factor = float3(1, 1, 1);
-	Ray Scattered = _Ray(float3(0, 0, 0), float3(0, 0, 0));
-	float3 Attenuation = float3(0, 0, 0);
 
-	for (int i = 0; i < MAX_RAY_RECURSIVE_DEPTH; i++)
+	if (SimpleAccelerationStructure_Hit(sas, R, MINT, INFINITY, Rec))
 	{
-		if (SimpleAccelerationStructure_Hit(sas, R, MINT, INFINITY, Rec))
-		{
-			float Offset = ((float)i) / (float)(MAX_RAY_RECURSIVE_DEPTH * 2);
+		float3 Color = float3(0, 0, 0);
 
-			if (Material_Scatter(Rec.Material, R, Rec, Attenuation, Scattered, float3(uv, Offset)))
-			{
-				R = Scattered;
-				Factor *= Attenuation;
-			}
-			else
-			{
-				return float3(0, 0, 0);
-			}
-		}
-		else
+		for (int s = 0; s < SHADOW_SAMPLES; s++)
 		{
-			float3 UnitDir = normalize(R.Dir);
-			float t = 0.5 * (UnitDir.y + 1.0f);
-			return lerp(BKG_COLOR0, BKG_COLOR1, t) * Factor;
+			float3 Pos = Rec.P + RandomDiskPoint(float3(Rec.P.xy, (float)s), Rec.Normal) * 0.05;
+			float3 L = PointLightPos - Rec.P;
+			float MaxT = length(L);
+			RayQuery RQ = _RayQuery(sas, _Ray(Pos, L), MINT, MaxT);
+			RayQueryProcess(RQ);
+			if (RayQueryGetIntersectionType(RQ) == RQ_HIT_NONE)
+			{
+				L = normalize(L);
+				float Diffuse = max(dot(Rec.Normal, L), 0.0f);
+				Color += Rec.Material.Albedo * Diffuse * PointLightColor.rgb * PointLightColor.a;
+			}
 		}
+		Color /= SHADOW_SAMPLES;
+		Color += float3(0.1, 0.1, 0.1);
+		return Color;
 	}
-	return float3(0, 0, 0);
+	else
+	{
+		float3 UnitDir = normalize(R.Dir);
+		float t = 0.5 * (UnitDir.y + 1.0f);
+		return lerp(BKG_COLOR0, BKG_COLOR1, t);
+	}	
 }
-
 
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
@@ -65,9 +67,9 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 	float3 Horizontal = float3(ViewportSize.x, 0, 0);
 	float3 Vertical = float3(0, ViewportSize.y, 0);
 	float3 LowerLeftCorner = Origin - (Horizontal / 2.0) - (Vertical / 2.0) - float3(0, 0, FocalLength);
-	
+
 	SimpleAccelerationStructure SAS = _SimpleAccelerationStructure(int(TargetSize.w), SimpleAccelerationStructureData);
-	
+
 	float3 LookFrom = float3(13, 2, 3);
 	float3 LookAt = float3(0, 0, 0);
 	float3 VUp = float3(0, 1, 0);
@@ -90,7 +92,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 	}
 	Color /= float(AA_SAMPLES);
 	Color = clamp(Color, 0, 1);
-	Color = pow(Color, 1.0/1.8);
-	
+	Color = pow(Color, 1.0 / 1.8);
+
 	Result[id.xy] = float4(Color, 1);
 }

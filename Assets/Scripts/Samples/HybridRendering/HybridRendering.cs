@@ -1,15 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
-public class RayTracingInOneWeekend : MonoBehaviour
+public class HybridRendering : MonoBehaviour
 {
     public enum MaterialType
     {
-        MAT_LAMBERTIAN  = 0,
-        MAT_METAL       = 1,
-        MAT_DIELECTRIC  = 2,
+        MAT_LAMBERTIAN = 0,
+        MAT_METAL = 1,
+        MAT_DIELECTRIC = 2,
     }
 
     public struct SphereData
@@ -21,36 +20,23 @@ public class RayTracingInOneWeekend : MonoBehaviour
         public Vector4 MaterialData;
     }
 
-    public Material m_QuadMaterial;
-    public ComputeShader m_ComputeRT;
-    public Vector2Int m_RTSize;
+    public Material m_Material;
+    public Light m_PointLight;
 
-    RenderTexture m_RTTarget;
     ComputeBuffer m_SimpleAccelerationStructureDataBuffer;
     int m_NumSpheres = 0;
     SphereData[] m_SphereArray = new SphereData[512];
     float[] m_SphereTimeOffset = new float[512];
+    GameObject[] m_SphereGOArray = new GameObject[512];
 
     // Start is called before the first frame update
     void Start()
     {
-        //m_RTTarget = new RenderTexture(m_RTSize.x, m_RTSize.y, 0, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_SRGB);
-        m_RTTarget = new RenderTexture(m_RTSize.x, m_RTSize.y, 0, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm);
-        m_RTTarget.enableRandomWrite = true;
-        m_RTTarget.Create();
-        m_QuadMaterial.SetTexture("_MainTex", m_RTTarget);
-
-        m_SimpleAccelerationStructureDataBuffer = new ComputeBuffer(512, System.Runtime.InteropServices.Marshal.SizeOf(typeof(SphereData)));
+        m_SimpleAccelerationStructureDataBuffer = new ComputeBuffer(512, System.Runtime.InteropServices.Marshal.SizeOf(typeof(SphereData)), ComputeBufferType.Default);
 
         SphereData Data = new SphereData();
-
-        Data.Center = new Vector3(0, -1000.0f, 0.0f);
-        Data.Radius = 1000.0f;
-        Data.MaterialType = (int)MaterialType.MAT_LAMBERTIAN;
-        Data.MaterialAlbedo = new Vector3(0.5f, 0.5f, 0.5f);
-        m_SphereArray[m_NumSpheres] = Data;
-        m_SphereTimeOffset[m_NumSpheres] = UnityEngine.Random.Range(0, 100.0f);
-        m_NumSpheres++;
+        Color[] Colors;
+        Mesh SphereMesh;
 
         Data.Center = new Vector3(0, 1.0f, 0.0f);
         Data.Radius = 1.0f;
@@ -59,6 +45,15 @@ public class RayTracingInOneWeekend : MonoBehaviour
         Data.MaterialData = new Vector4(1.5f, 0.0f, 0.0f, 0.0f);
         m_SphereArray[m_NumSpheres] = Data;
         m_SphereTimeOffset[m_NumSpheres] = UnityEngine.Random.Range(0, 100.0f);
+        m_SphereGOArray[m_NumSpheres] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        m_SphereGOArray[m_NumSpheres].transform.localPosition = Data.Center;
+        m_SphereGOArray[m_NumSpheres].transform.localScale = new Vector3(Data.Radius * 2.0f, Data.Radius * 2.0f, Data.Radius * 2.0f);
+        m_SphereGOArray[m_NumSpheres].GetComponent<Renderer>().material = m_Material;
+        SphereMesh = m_SphereGOArray[m_NumSpheres].GetComponent<MeshFilter>().mesh;
+        Colors = new Color[SphereMesh.vertices.Length];
+        for (int i = 0; i < SphereMesh.vertices.Length; i++)
+            Colors[i] = new Color(Data.MaterialAlbedo.x, Data.MaterialAlbedo.y, Data.MaterialAlbedo.z, 1.0f);
+        SphereMesh.colors = Colors;        
         m_NumSpheres++;
 
         Data.Center = new Vector3(-4.0f, 1.0f, 0.0f);
@@ -68,6 +63,15 @@ public class RayTracingInOneWeekend : MonoBehaviour
         Data.MaterialData = new Vector4(1.0f, 0.0f, 0.0f, 0.0f);
         m_SphereArray[m_NumSpheres] = Data;
         m_SphereTimeOffset[m_NumSpheres] = UnityEngine.Random.Range(0, 100.0f);
+        m_SphereGOArray[m_NumSpheres] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        m_SphereGOArray[m_NumSpheres].transform.localPosition = Data.Center;
+        m_SphereGOArray[m_NumSpheres].transform.localScale = new Vector3(Data.Radius * 2.0f, Data.Radius * 2.0f, Data.Radius * 2.0f);
+        m_SphereGOArray[m_NumSpheres].GetComponent<Renderer>().material = m_Material;
+        SphereMesh = m_SphereGOArray[m_NumSpheres].GetComponent<MeshFilter>().mesh;
+        Colors = new Color[SphereMesh.vertices.Length];
+        for (int i = 0; i < SphereMesh.vertices.Length; i++)
+            Colors[i] = new Color(Data.MaterialAlbedo.x, Data.MaterialAlbedo.y, Data.MaterialAlbedo.z, 1.0f);
+        SphereMesh.colors = Colors;
         m_NumSpheres++;
 
         Data.Center = new Vector3(4.0f, 1.0f, 0.0f);
@@ -77,6 +81,15 @@ public class RayTracingInOneWeekend : MonoBehaviour
         Data.MaterialData = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
         m_SphereArray[m_NumSpheres] = Data;
         m_SphereTimeOffset[m_NumSpheres] = UnityEngine.Random.Range(0, 100.0f);
+        m_SphereGOArray[m_NumSpheres] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        m_SphereGOArray[m_NumSpheres].transform.localPosition = Data.Center;
+        m_SphereGOArray[m_NumSpheres].transform.localScale = new Vector3(Data.Radius * 2.0f, Data.Radius * 2.0f, Data.Radius * 2.0f);
+        m_SphereGOArray[m_NumSpheres].GetComponent<Renderer>().material = m_Material;
+        SphereMesh = m_SphereGOArray[m_NumSpheres].GetComponent<MeshFilter>().mesh;
+        Colors = new Color[SphereMesh.vertices.Length];
+        for (int i = 0; i < SphereMesh.vertices.Length; i++)
+            Colors[i] = new Color(Data.MaterialAlbedo.x, Data.MaterialAlbedo.y, Data.MaterialAlbedo.z, 1.0f);
+        SphereMesh.colors = Colors;
         m_NumSpheres++;
 
         for (int a = -4; a < 5; a++)
@@ -118,24 +131,38 @@ public class RayTracingInOneWeekend : MonoBehaviour
                     }
                     m_SphereArray[m_NumSpheres] = Data;
                     m_SphereTimeOffset[m_NumSpheres] = UnityEngine.Random.Range(0, 100.0f);
+                    m_SphereGOArray[m_NumSpheres] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    m_SphereGOArray[m_NumSpheres].transform.localPosition = Data.Center;
+                    m_SphereGOArray[m_NumSpheres].transform.localScale = new Vector3(Data.Radius * 2.0f, Data.Radius * 2.0f, Data.Radius * 2.0f);
+                    m_SphereGOArray[m_NumSpheres].GetComponent<Renderer>().material = m_Material;
+                    SphereMesh = m_SphereGOArray[m_NumSpheres].GetComponent<MeshFilter>().mesh;
+                    Colors = new Color[SphereMesh.vertices.Length];
+                    for (int i = 0; i < SphereMesh.vertices.Length; i++)
+                        Colors[i] = new Color(Data.MaterialAlbedo.x, Data.MaterialAlbedo.y, Data.MaterialAlbedo.z, 1.0f);
+                    SphereMesh.colors = Colors;
                     m_NumSpheres++;
                 }
             }
         }
         m_SimpleAccelerationStructureDataBuffer.SetData(m_SphereArray);
+
+        Camera.main.transform.localPosition = new Vector3(13, 2, -3);
+        Camera.main.transform.LookAt(new Vector3(0, 0, 0));
     }
-    
+
     // Update is called once per frame
     void Update()
     {
         for (int i = 4; i < m_NumSpheres; i++)
+        {
             m_SphereArray[i].Center.y = 0.2f + (UnityEngine.Mathf.Sin(m_SphereTimeOffset[i] + (Time.time * 2.0f))) + 1.0f;
-
-        int KernelHandle = m_ComputeRT.FindKernel("CSMain");        
-        m_ComputeRT.SetVector("TargetSize", new Vector4(m_RTSize.x, m_RTSize.y, UnityEngine.Mathf.Sin(Time.time * 10.0f), m_NumSpheres));
-        m_ComputeRT.SetTexture(KernelHandle, "Result", m_RTTarget);
+            m_SphereGOArray[i].transform.localPosition = m_SphereArray[i].Center;
+        }        
         m_SimpleAccelerationStructureDataBuffer.SetData(m_SphereArray);
-        m_ComputeRT.SetBuffer(KernelHandle, "SimpleAccelerationStructureData", m_SimpleAccelerationStructureDataBuffer);
-        m_ComputeRT.Dispatch(KernelHandle, m_RTSize.x / 8, m_RTSize.y / 8, 1);
+
+        m_Material.SetVector("TargetSize", new Vector4(0, 0, UnityEngine.Mathf.Sin(Time.time * 10.0f), m_NumSpheres));
+        m_Material.SetVector("PointLightPos", new Vector4(m_PointLight.transform.position.x, m_PointLight.transform.position.y, m_PointLight.transform.position.z, 0.0f));
+        m_Material.SetVector("PointLightColor", new Vector4(m_PointLight.color.r, m_PointLight.color.g, m_PointLight.color.b, m_PointLight.intensity));        
+        m_Material.SetBuffer("SimpleAccelerationStructureData", m_SimpleAccelerationStructureDataBuffer);
     }
 }
