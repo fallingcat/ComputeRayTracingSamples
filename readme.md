@@ -9,7 +9,7 @@ This project collects multiple compute shader based ray tracing samples for Unit
 
 ## Ray Tracing in One Weekend 
 <img src="./Screenshot.gif" height="333px" width="640px" >
-This is an Unity sample project which shows how to implement a tiny ray tracer using compue shader. The implementation is based on
+This is an Unity sample which shows how to implement a tiny ray tracer using compue shader. The implementation is based on
 
 [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html) article.
 
