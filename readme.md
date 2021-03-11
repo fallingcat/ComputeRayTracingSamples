@@ -33,10 +33,14 @@ Maximum tracing depth : 6
 
 This is an Unity sample which shows how to implement ray query using compue shader. This sample uses simple ray tracing for shading and ray query for shadow.
 
+![](RayQuery_Screenshot.jpg)
+
 ## Hybrid Rendering
 <img src="./HybridRendering_Screenshot.gif" height="333px" width="640px" >
 
 This is an Unity sample which shows how to use ray query in fragment shader to render shadow. This sample uses traditional raster for shading and ray query for shadow.
+
+![](HybridRendering_Screenshot.jpg)
 
 
 
