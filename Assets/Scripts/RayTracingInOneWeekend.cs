@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class TinyRT : MonoBehaviour
+public class RayTracingInOneWeekend : MonoBehaviour
 {
     public enum MaterialType
     {
@@ -26,7 +26,7 @@ public class TinyRT : MonoBehaviour
     public Vector2Int m_RTSize;
 
     RenderTexture m_RTTarget;
-    ComputeBuffer m_WorldDataBuffer;
+    ComputeBuffer m_SimpleAccelerationStructureDataBuffer;
     int m_NumSpheres = 0;
     SphereData[] m_SphereArray = new SphereData[512];
     float[] m_SphereTimeOffset = new float[512];
@@ -40,7 +40,7 @@ public class TinyRT : MonoBehaviour
         m_RTTarget.Create();
         m_QuadMaterial.SetTexture("_MainTex", m_RTTarget);
 
-        m_WorldDataBuffer = new ComputeBuffer(512, System.Runtime.InteropServices.Marshal.SizeOf(typeof(SphereData)));
+        m_SimpleAccelerationStructureDataBuffer = new ComputeBuffer(512, System.Runtime.InteropServices.Marshal.SizeOf(typeof(SphereData)));
 
         SphereData Data = new SphereData();
 
@@ -122,7 +122,7 @@ public class TinyRT : MonoBehaviour
                 }
             }
         }
-        m_WorldDataBuffer.SetData(m_SphereArray);
+        m_SimpleAccelerationStructureDataBuffer.SetData(m_SphereArray);
     }
     
     // Update is called once per frame
@@ -134,8 +134,8 @@ public class TinyRT : MonoBehaviour
         int KernelHandle = m_ComputeRT.FindKernel("CSMain");        
         m_ComputeRT.SetVector("TargetSize", new Vector4(m_RTSize.x, m_RTSize.y, UnityEngine.Mathf.Sin(Time.time * 10.0f), m_NumSpheres));
         m_ComputeRT.SetTexture(KernelHandle, "Result", m_RTTarget);
-        m_WorldDataBuffer.SetData(m_SphereArray);
-        m_ComputeRT.SetBuffer(KernelHandle, "WorldData", m_WorldDataBuffer);
+        m_SimpleAccelerationStructureDataBuffer.SetData(m_SphereArray);
+        m_ComputeRT.SetBuffer(KernelHandle, "SimpleAccelerationStructureData", m_SimpleAccelerationStructureDataBuffer);
         m_ComputeRT.Dispatch(KernelHandle, m_RTSize.x / 8, m_RTSize.y / 8, 1);
     }
 }

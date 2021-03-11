@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 12882120}
   - component: {fileID: 12882119}
   m_Layer: 0
-  m_Name: TinyRT
+  m_Name: RTOW
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

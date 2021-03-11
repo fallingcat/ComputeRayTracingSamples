@@ -1,13 +1,16 @@
-# Compute Tiny Ray Tracer
+# Compute Ray Tracing Samples
 
----
+This is an Unity sample project which collects ray tracing samples which are based on compute shader.
 
+
+# Samples
+
+## Ray Tracing in One Weekend 
 <img src="./Screenshot.gif" height="333px" width="640px" >
-
 This is an Unity sample project which shows how to implement a tiny ray tracer using compue shader. The implementation is based on [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html) article.
 
 
-## Image Quality Compare
+### Image Quality Compare
 
 Samples per pixel  : 64
 
@@ -21,6 +24,10 @@ Samples per pixel  : 16
 Maximum tracing depth : 6
 
 ![](Screenshot.jpg)
+
+## Ray Query
+
+## Hybrid Rendering
 
 
 

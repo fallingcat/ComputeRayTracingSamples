@@ -32,22 +32,7 @@ float3 Ray_At(Ray r, float t)
 	return (r.Orig + r.Dir * t);
 }
 
-float3 xRay_Color(Ray r, World w)
-{
-	Sphere Sph;
-	HitRecord Rec = _HitRecord();
-
-	if (World_Hit(w, r, MINT, INFINITY, Rec))
-	{
-		return 0.5 * (Rec.Normal + float3(1, 1, 1));
-	}
-
-	float3 UnitDir = normalize(r.Dir);
-	float t = 0.5 * (UnitDir.y + 1.0f);
-	return (1.0 - t) * float3(1.0, 1.0, 1.0) + t * float3(0.5, 0.7, 1.0);
-}
-
-float3 Ray_Color(Ray r, World w, float2 uv)
+float3 Ray_Color(Ray r, SimpleAccelerationStructure sas, float2 uv)
 {
 	Sphere Sph;
 	HitRecord Rec = _HitRecord();
@@ -58,7 +43,7 @@ float3 Ray_Color(Ray r, World w, float2 uv)
 
 	for (int i = 0; i < MAX_RAY_RECURSIVE_DEPTH; i++)
 	{
-		if (World_Hit(w, R, MINT, INFINITY, Rec))
+		if (SimpleAccelerationStructure_Hit(sas, R, MINT, INFINITY, Rec))
 		{			
 			float Offset = ((float)i) / (float)(MAX_RAY_RECURSIVE_DEPTH * 2);
 

@@ -39,7 +39,7 @@ struct Sphere
 	Material Material;
 };
 
-struct World
+struct SimpleAccelerationStructure
 {
 	int NumObjects;
 };
@@ -58,7 +58,7 @@ HitRecord _HitRecord();
 
 Ray _Ray(float3 o, float3 d);
 float3 Ray_At(Ray r, float t);
-float3 Ray_Color(Ray r, World w);
+float3 Ray_Color(Ray r, SimpleAccelerationStructure sas);
 
 Sphere _Sphere(float3 c, float r, Material m);
 bool Sphere_Hit(Sphere s, Ray r, float t_min, float t_max, inout HitRecord rec);
@@ -66,8 +66,8 @@ bool Sphere_Hit(Sphere s, Ray r, float t_min, float t_max, inout HitRecord rec);
 Material _Material(int type, float3 albedo, float fuzz);
 bool Material_Scatter(inout Material m, Ray r, HitRecord rec, inout float3 attenuation, inout Ray scattered, float3 seed);
 
-World _World(int num);
-bool World_Hit(World w, Ray r, float t_min, float t_max, inout HitRecord rec);
+SimpleAccelerationStructure _SimpleAccelerationStructure(int num);
+bool SimpleAccelerationStructure_Hit(SimpleAccelerationStructure sas, Ray r, float t_min, float t_max, inout HitRecord rec);
 
 Camera _Camera(float3 look_from, float3 look_at, float3 vup, float3 vfov, float aspect_ratio, float aperture, float focus_dist);
 Ray Camera_GetRay(Camera c, float2 uv);

@@ -11,7 +11,7 @@ struct SphereData
 	float4 MaterialData;
 };
 
-StructuredBuffer<SphereData> WorldData;
+StructuredBuffer<SphereData> SimpleAccelerationStructureData;
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> Result;
@@ -23,7 +23,7 @@ float4 TargetSize;
 #include "Ray.cginc"
 #include "Material.cginc"
 #include "Sphere.cginc"
-#include "World.cginc"
+#include "SimpleAS.cginc"
 #include "Camera.cginc"
 
 [numthreads(8, 8, 1)]
@@ -37,7 +37,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 	float3 Vertical = float3(0, ViewportSize.y, 0);
 	float3 LowerLeftCorner = Origin - (Horizontal / 2.0) - (Vertical / 2.0) - float3(0, 0, FocalLength);
 	
-	World W = _World(int(TargetSize.w));
+	SimpleAccelerationStructure SAS = _SimpleAccelerationStructure(int(TargetSize.w));
 	
 	float3 LookFrom = float3(13, 2, 3);
 	float3 LookAt = float3(0, 0, 0);
@@ -57,7 +57,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 		float2 UV = (float2(id.xy) + Jitter) / TargetSize.xy;
 
 		Ray R = Camera_GetRay(Cam, UV);
-		Color += Ray_Color(R, W, UV);
+		Color += Ray_Color(R, SAS, UV);
 	}
 	Color /= float(AA_SAMPLES);
 	Color = clamp(Color, 0, 1);
