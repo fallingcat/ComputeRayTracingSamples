@@ -5,10 +5,10 @@ This project collects multiple compute shader based ray tracing samples for Unit
 - Ray Tracing in One Weekend
 - Ray Query
 - Hybrid Rendering
-- Voxel Ray Tracer(upcoming)
-- Subsurface Scattering(upcoming)
-- Hybrid Ambient Occlusion(upcoming)
-- Hybrid reflection and refraction(upcoming)
+- Voxel Ray Tracer (upcoming)
+- Subsurface Scattering (upcoming)
+- Hybrid Ambient Occlusion (upcoming)
+- Hybrid reflection and refraction (upcoming)
 
 # Samples
 
