@@ -43,7 +43,7 @@ This sample demonstrates how to implement ray query using compue shader. This sa
 ## Hybrid Rendering
 <img src="./HybridRendering_Screenshot.gif" height="333px" width="640px" >
 
-This sample demonstrates how to use ray query in fragment shader to render shadow. This sample uses traditional rastering for shading and ray query for shadow. That is why it is called hybrid rendering.
+This sample demonstrates how to use ray query in fragment shader to render shadow. This sample uses traditional rasterizing for shading and ray query for shadow. That is why it is called hybrid rendering.
 
 ![](HybridRendering_Screenshot.jpg)
 
