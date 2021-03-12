@@ -1,6 +1,7 @@
 # Overview
 
-This project collects multiple compute shader based ray tracing samples for Unity.
+This project collects multiple compute shader based ray tracing samples for Unity. Because the samples use compute shader for ray tracing, they are not as fast as hardware ray tracing. The main purpose of this project is demostrating how the ray tracing works. It is very helpfuly for the people who want to know the knowledge behind hardware ray tracing. This project contains following samples:
+
 - Ray Tracing in One Weekend
 - Ray Query
 - Hybrid Rendering
