@@ -8,7 +8,7 @@ This project collects multiple compute shader based ray tracing samples for Unit
 - Voxel Ray Tracer (upcoming)
 - Subsurface Scattering (upcoming)
 - Hybrid Ambient Occlusion (upcoming)
-- Hybrid reflection and refraction (upcoming)
+- Hybrid Reflection and Refraction (upcoming)
 
 # Samples
 
