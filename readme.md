@@ -55,7 +55,7 @@ This sample demonstrates how to build BVH tree and use it in compute shader to s
 
 - 3 rays per fragment(1 ray for rendering, 2 rays for shadowing)
 - 21129 voxels
-- Use 15 levles deep BVH tree to speed up traversal
+- Use 15 levls deep BVH tree to speed up traversal
 - ~200 fps
 
 ![](VoxelRayTracer_BVH.jpg)
