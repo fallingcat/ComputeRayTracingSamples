@@ -5,7 +5,7 @@ This project collects multiple compute shader based ray tracing samples for Unit
 - Ray Tracing in One Weekend
 - Ray Query
 - Hybrid Rendering
-- Voxel Ray Tracer (upcoming)
+- Voxel Ray Tracer
 - Subsurface Scattering (upcoming)
 - Hybrid Ambient Occlusion (upcoming)
 - Hybrid Reflection and Refraction (upcoming)
@@ -48,6 +48,26 @@ This sample demonstrates how to use ray query in fragment shader to render shado
 ![](HybridRendering_Screenshot.jpg)
 
 
+## Voxel Ray Tracer 
+This sample demonstrates how to build BVH tree and use it in compute shader to speed up scene traversal. This sample uses voxel scene to simplify the BVH building procedure.  
+
+### With BVH
+
+- 3 rays per fragment(1 ray for rendering, 2 rays for shadowing)
+- 21129 voxels
+- Use 15 levles deep BVH tree to speed up traversal
+- ~200 fps
+
+![](VoxelRayTracer_BVH.jpg)
+
+### Without BVH
+
+- 3 rays per fragment(1 ray for rendering, 2 rays for shadowing)
+- 21129 voxels
+- Brute-force traversal
+- ~5 fps
+
+![](VoxelRayTracer_BruteForce.jpg)
 
 
 

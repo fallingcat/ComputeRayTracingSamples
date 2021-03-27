@@ -34,7 +34,7 @@ float3 Ray_Color(Ray r, SimpleAccelerationStructure sas, float2 uv)
 		for (int s = 0; s < SHADOW_SAMPLES; s++)
 		{
 			float3 Pos = Rec.P + RandomDiskPoint(float3(Rec.P.xy, (float)s), Rec.Normal) * 0.05;
-			float3 L = PointLightPos - Rec.P;
+			float3 L = PointLightPos.xyz - Pos;
 			float MaxT = length(L);
 			RayQuery RQ = _RayQuery(sas, _Ray(Pos, L), MINT, MaxT);
 			RayQueryProcess(RQ);
@@ -42,11 +42,12 @@ float3 Ray_Color(Ray r, SimpleAccelerationStructure sas, float2 uv)
 			{
 				L = normalize(L);
 				float Diffuse = max(dot(Rec.Normal, L), 0.0f);
-				Color += Rec.Material.Albedo * Diffuse * PointLightColor.rgb * PointLightColor.a;
+				Color += Diffuse * PointLightColor.rgb * PointLightColor.a;
 			}
 		}
 		Color /= SHADOW_SAMPLES;
 		Color += float3(0.1, 0.1, 0.1);
+		Color *= Rec.Material.Albedo;
 		return Color;
 	}
 	else

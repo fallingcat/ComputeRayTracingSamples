@@ -1,4 +1,7 @@
-﻿Material _Material(int type, float3 albedo, float fuzz)
+﻿//----------------------------------------------------------------------------------------
+// 
+//----------------------------------------------------------------------------------------
+Material _Material(int type, float3 albedo, float fuzz)
 {
 	Material M;
 
@@ -9,7 +12,9 @@
 
 	return M;
 }
-
+//----------------------------------------------------------------------------------------
+// 
+//----------------------------------------------------------------------------------------
 bool Material_Scatter(inout Material m, Ray r, HitRecord rec, inout float3 attenuation, inout Ray scattered, float3 seed)
 {
 	switch (m.Type)

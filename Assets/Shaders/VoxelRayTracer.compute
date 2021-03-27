@@ -1,0 +1,272 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+#define AA_SAMPLES				1
+#define SHADOW_SAMPLES			2
+#define SHADOW_KENEL			1.0
+#define NUM_THREAD				8
+#define THREAD_STACK_SIZE		64
+#define MAX_RAY_RECURSIVE_DEPTH 2
+
+
+
+#include "Types.cginc"
+
+groupshared int TreeStack[NUM_THREAD * NUM_THREAD * THREAD_STACK_SIZE];
+
+float4 TargetSize;
+float4 TreeSize;
+float4 PointLightPos;
+float4 PointLightColor;
+float4 AmbientColor;
+bool bUseBVH;
+
+#include "Utility.cginc"
+#include "Ray.cginc"
+#include "AABB.cginc"
+#include "Material.cginc"
+#include "VoxelFace.cginc"
+#include "VoxelAS.cginc"
+#include "Camera.cginc"
+#include "VoxelRayQuery.cginc"
+
+StructuredBuffer<TreeNodeData> Node;
+StructuredBuffer<TreeLeafData> Leaf;
+StructuredBuffer<VoxelData> BLAS;
+
+RWTexture2D<float4> Result;
+
+float3 Ray_Color(Ray r, VoxelAccelerationStructure as, float2 uv)
+{
+	float3 Color = float3(0, 0, 0);
+	HitRecord Rec = _HitRecord();
+
+	if (bUseBVH)
+	{
+		if (VoxelAccelerationStructure_Hit(as, r, MINT, INFINITY, Rec))
+		{
+			if (SHADOW_SAMPLES > 1)
+			{
+				for (int s = 0; s < SHADOW_SAMPLES; s++)
+				{
+					float3 Pos = Rec.P + RandomDiskPoint(float3(Rec.P.xy, (float)s), Rec.Normal) * SHADOW_KENEL;
+					float3 L = PointLightPos.xyz - Pos;
+					float MaxT = length(L);
+					VoxelRayQuery RQ = _VoxelRayQuery(as, _Ray(Pos, L), MINT, MaxT);
+					VoxelRayQueryProcess(RQ);
+					if (VoxelRayQueryGetIntersectionType(RQ) == RQ_HIT_NONE)
+					{
+						L = L / MaxT;
+						float Diffuse = max(dot(Rec.Normal, L), 0.0f);
+						Color += Diffuse * PointLightColor.rgb * PointLightColor.a;
+					}
+				}
+				Color /= SHADOW_SAMPLES;
+				Color += AmbientColor.rgb;
+				Color *= Rec.Material.Albedo;
+			}
+			else			
+			{
+				float3 L = PointLightPos.xyz - Rec.P;
+				float MaxT = length(L);
+				VoxelRayQuery RQ = _VoxelRayQuery(as, _Ray(Rec.P, L), MINT, MaxT);
+				VoxelRayQueryProcess(RQ);
+				if (VoxelRayQueryGetIntersectionType(RQ) == RQ_HIT_NONE)
+				{
+					L = L / MaxT;
+					float Diffuse = max(dot(Rec.Normal, L), 0.0f);
+					Color += Diffuse * PointLightColor.rgb * PointLightColor.a;										
+				}
+				Color += AmbientColor.rgb;
+				Color *= Rec.Material.Albedo;				
+			}
+			return Color;
+		}
+		else
+		{
+			float3 UnitDir = normalize(r.Dir);
+			float t = 0.5 * (UnitDir.y + 1.0f) * 5.0f;
+			return lerp(BKG_COLOR0, BKG_COLOR1, t);
+		}
+	}
+	else
+	{
+		if (PrmitiveList_Hit(as, r, MINT, INFINITY, Rec))
+		{
+			if (SHADOW_SAMPLES > 1)
+			{
+				for (int s = 0; s < SHADOW_SAMPLES; s++)
+				{
+					float3 Pos = Rec.P + RandomDiskPoint(float3(Rec.P.xy, (float)s), Rec.Normal) * SHADOW_KENEL;
+					float3 L = PointLightPos.xyz - Pos;
+					float MaxT = length(L);
+					VoxelRayQuery RQ = _VoxelRayQuery(as, _Ray(Pos, L), MINT, MaxT);
+					VoxelRayQueryProcessNoAS(RQ);
+					if (VoxelRayQueryGetIntersectionType(RQ) == RQ_HIT_NONE)
+					{
+						L = L / MaxT;
+						float Diffuse = max(dot(Rec.Normal, L), 0.0f);
+						Color += Diffuse * PointLightColor.rgb * PointLightColor.a;
+					}
+				}
+				Color /= SHADOW_SAMPLES;
+				Color += AmbientColor.rgb;
+				Color *= Rec.Material.Albedo;
+			}
+			else
+			{
+				float3 L = PointLightPos.xyz - Rec.P;
+				float MaxT = length(L);
+				VoxelRayQuery RQ = _VoxelRayQuery(as, _Ray(Rec.P, L), MINT, MaxT);
+				VoxelRayQueryProcessNoAS(RQ);
+				if (VoxelRayQueryGetIntersectionType(RQ) == RQ_HIT_NONE)
+				{
+					L = L / MaxT;
+					float Diffuse = max(dot(Rec.Normal, L), 0.0f);
+					Color += Diffuse * PointLightColor.rgb * PointLightColor.a;
+				}
+				Color += AmbientColor.rgb;
+				Color *= Rec.Material.Albedo;
+			}
+			return Color;
+		}
+		else
+		{
+			float3 UnitDir = normalize(r.Dir);
+			float t = 0.5 * (UnitDir.y + 1.0f) * 5.0f;
+			return lerp(BKG_COLOR0, BKG_COLOR1, t);
+		}
+	}
+}
+
+[numthreads(NUM_THREAD, NUM_THREAD, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID, uint gid : SV_GroupIndex)
+{
+	float2 ViewportSize = float2(2.0, 2.0);
+	float FocalLength = 1.0f;
+
+	float3 Origin = float3(0, 0, 0);
+	float3 Horizontal = float3(ViewportSize.x, 0, 0);
+	float3 Vertical = float3(0, ViewportSize.y, 0);
+	float3 LowerLeftCorner = Origin - (Horizontal / 2.0) - (Vertical / 2.0) - float3(0, 0, FocalLength);
+	
+	VoxelAccelerationStructure AS = _VoxelAccelerationStructure(int(TreeSize.y), Node, Leaf, BLAS, gid * THREAD_STACK_SIZE);
+
+	float3 LookFrom = float3(200, 160, -200);
+	float3 LookAt = float3(0, -12, 0);
+	float3 VUp = float3(0, 1, 0);
+	float Dist2Focus = 10.0;
+	float Aperture = 0.00002;
+	Camera Cam = _Camera(LookFrom, LookAt, VUp, 25, TargetSize.x / TargetSize.y, Aperture, Dist2Focus);
+
+	float3 Color = float3(0, 0, 0);
+
+	float2 AAJitter[8] = {
+		float2(-0.5,  0.0),
+		float2( 0.5,  0.0),
+		float2( 0.0, -0.5),
+		float2( 0.0,  0.5),
+		float2(-0.5,  0.5),
+		float2( 0.5, -0.5),
+		float2(-0.5, -0.5),
+		float2( 0.5,  0.5),
+	};
+
+	if (AA_SAMPLES > 1)
+	{
+		for (int s = 0; s < AA_SAMPLES; s++)
+		{
+			float2 Seed = float2(id.xy) / TargetSize.xy;
+			float2 UV = (float2(id.xy) + AAJitter[s]) / TargetSize.xy;
+
+			Ray R = Camera_GetCurrentRay(Cam, UV);
+			Color += Ray_Color(R, AS, UV);
+		}
+		Color /= float(AA_SAMPLES);
+	}
+	else
+	{
+		float2 UV = float2(id.xy) / TargetSize.xy;
+		Ray R = Camera_GetCurrentRay(Cam, UV);
+		Color += Ray_Color(R, AS, UV);
+	}
+
+	Color = clamp(Color, 0, 1);
+	
+	Result[id.xy] = float4(Color, 1);
+}
+
+/*
+float3 Ray_Color(Ray r, VoxelAccelerationStructure sas, float2 uv)
+{
+	HitRecord Rec = _HitRecord();
+	Ray R = r;
+	float3 Factor = float3(1, 1, 1);
+	Ray Scattered = _Ray(float3(0, 0, 0), float3(0, 0, 0));
+	float3 Attenuation = float3(0, 0, 0);
+
+	for (int i = 0; i < MAX_RAY_RECURSIVE_DEPTH; i++)
+	{
+		if (VoxelAccelerationStructure_Hit(sas, R, MINT, INFINITY, Rec))
+		{
+			float Offset = ((float)i) / (float)(MAX_RAY_RECURSIVE_DEPTH * 2);
+
+			if (Material_Scatter(Rec.Material, R, Rec, Attenuation, Scattered, float3(uv, Offset)))
+			{
+				R = Scattered;
+				Factor *= Attenuation;
+			}
+			else
+			{
+				return float3(0, 0, 0);
+			}
+		}
+		else
+		{
+			float3 UnitDir = normalize(r.Dir);
+			float t = 0.5 * (UnitDir.y + 1.0f) * 5.0f;
+			return lerp(BKG_COLOR0, BKG_COLOR1, t) * Factor;
+		}
+	}
+	return float3(0, 0, 0);
+}
+
+[numthreads(NUM_THREAD, NUM_THREAD, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID, uint gid : SV_GroupIndex)
+{
+	float2 ViewportSize = float2(2.0, 2.0);
+	float FocalLength = 1.0f;
+
+	float3 Origin = float3(0, 0, 0);
+	float3 Horizontal = float3(ViewportSize.x, 0, 0);
+	float3 Vertical = float3(0, ViewportSize.y, 0);
+	float3 LowerLeftCorner = Origin - (Horizontal / 2.0) - (Vertical / 2.0) - float3(0, 0, FocalLength);
+
+	VoxelAccelerationStructure AS = _VoxelAccelerationStructure(int(TreeSize.y), Node, Leaf, BLAS, gid * THREAD_STACK_SIZE);
+
+	float3 LookFrom = float3(200, 160, -200);
+	float3 LookAt = float3(0, -20, 0);
+	float3 VUp = float3(0, 1, 0);
+	float Dist2Focus = 10.0;
+	float Aperture = 0.00002;
+	Camera Cam = _Camera(LookFrom, LookAt, VUp, 25, TargetSize.x / TargetSize.y, Aperture, Dist2Focus);
+
+	float3 Color = float3(0, 0, 0);
+	for (int s = 0; s < AA_SAMPLES; s++)
+	{
+		float2 Seed = float2(id.xy) / TargetSize.xy;
+		float Offset = float(s) / float(AA_SAMPLES);
+
+		float2 Jitter = float2(Random(Seed), Random(Seed + Offset));
+		float2 UV = (float2(id.xy) + Jitter) / TargetSize.xy;
+
+		Ray R = Camera_GetRay(Cam, UV);
+		Color += Ray_Color(R, AS, UV);
+	}
+	Color /= float(AA_SAMPLES);
+	Color = clamp(Color, 0, 1);
+	//Color = pow(Color, 1.0 / 1.8);
+
+	Result[id.xy] = float4(Color, 1);
+}
+*/

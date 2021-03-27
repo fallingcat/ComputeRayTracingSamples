@@ -79,11 +79,12 @@
 					if (RayQueryGetIntersectionType(RQ) == RQ_HIT_NONE)
 					{						
 						float Diffuse = max(dot(N, L), 0);
-						Color += Diffuse * PointLightColor.rgb * PointLightColor.a * i.color;
+						Color += Diffuse * PointLightColor.rgb * PointLightColor.a;
 					}
 				}
 				Color /= SHADOW_SAMPLES;
 				Color += float3(0.1, 0.1, 0.1);
+				Color *= i.color;
 				Color = pow(Color, 1.0 / 1.8);
                 fixed4 col = fixed4(Color, 1);
                 

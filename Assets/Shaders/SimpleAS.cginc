@@ -1,4 +1,6 @@
-﻿
+﻿//----------------------------------------------------------------------------------------
+// 
+//----------------------------------------------------------------------------------------
 SimpleAccelerationStructure _SimpleAccelerationStructure(int num, StructuredBuffer<SphereData> data)
 {
 	SimpleAccelerationStructure SAS;
@@ -8,7 +10,9 @@ SimpleAccelerationStructure _SimpleAccelerationStructure(int num, StructuredBuff
 	
 	return SAS;
 }
-
+//----------------------------------------------------------------------------------------
+// 
+//----------------------------------------------------------------------------------------
 bool SimpleAccelerationStructure_Hit(SimpleAccelerationStructure sas, Ray r, float t_min, float t_max, inout HitRecord rec)
 {
 	HitRecord TempRec = _HitRecord();

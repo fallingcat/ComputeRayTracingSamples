@@ -8,4 +8,16 @@ EditorBuildSettings:
   - enabled: 0
     path: 
     guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: Assets/Scenes/HybridRendering.unity
+    guid: 9c49be019217cf4408ca54e9182c3f97
+  - enabled: 0
+    path: Assets/Scenes/RayQuery.unity
+    guid: cc31f95a85028b642b77f4b131b4e08c
+  - enabled: 1
+    path: Assets/Scenes/RayTracingInOneWeekend.unity
+    guid: 7036364f7d525124e93fc0842dd82798
+  - enabled: 0
+    path: Assets/Scenes/VoxelRayTracer.unity
+    guid: 975e753f373132b4091bcf6f47f4a921
   m_configObjects: {}

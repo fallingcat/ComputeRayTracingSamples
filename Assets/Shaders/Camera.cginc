@@ -1,4 +1,7 @@
-﻿Camera _Camera(float3 look_from, float3 look_at, float3 vup, 
+﻿//----------------------------------------------------------------------------------------
+// 
+//----------------------------------------------------------------------------------------
+Camera _Camera(float3 look_from, float3 look_at, float3 vup, 
 	           float vfov, float aspect_ratio, 
 			   float aperture, float focus_dist)
 {
@@ -23,11 +26,20 @@
 	return Cam;
 
 }
-
+//----------------------------------------------------------------------------------------
+// 
+//----------------------------------------------------------------------------------------
 Ray Camera_GetRay(Camera c, float2 uv)
 {
 	float3 rd = c.LensRadius * RandomDiskPoint(float3(uv, 0.4), c.w);
 	float3 Offset = c.u * rd.x + c.v * rd.y;
 
 	return _Ray(c.Origin + Offset, c.LowerLeftCorner + uv.x * c.Horizontal + uv.y * c.Vertical - c.Origin - Offset);	
+}
+//----------------------------------------------------------------------------------------
+// 
+//----------------------------------------------------------------------------------------
+Ray Camera_GetCurrentRay(Camera c, float2 uv)
+{	
+	return _Ray(c.Origin, c.LowerLeftCorner + uv.x * c.Horizontal + uv.y * c.Vertical - c.Origin);
 }

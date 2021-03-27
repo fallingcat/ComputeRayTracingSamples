@@ -128,8 +128,12 @@ public class RayTracingInOneWeekend : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        m_SphereArray[1].Center = new Vector3(4.0f * UnityEngine.Mathf.Cos(Time.time), 1.0f, 4.0f * UnityEngine.Mathf.Sin(Time.time)) + new Vector3(4.0f, 0.0f, 0.0f);
+
         for (int i = 4; i < m_NumSpheres; i++)
+        {
             m_SphereArray[i].Center.y = 0.2f + (UnityEngine.Mathf.Sin(m_SphereTimeOffset[i] + (Time.time * 2.0f))) + 1.0f;
+        }
 
         int KernelHandle = m_ComputeShader.FindKernel("CSMain");
         m_ComputeShader.SetVector("TargetSize", new Vector4(m_RTSize.x, m_RTSize.y, UnityEngine.Mathf.Sin(Time.time * 10.0f), m_NumSpheres));

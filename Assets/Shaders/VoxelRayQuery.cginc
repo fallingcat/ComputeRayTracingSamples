@@ -1,24 +1,41 @@
 ﻿//----------------------------------------------------------------------------------------
 // 
 //----------------------------------------------------------------------------------------
-RayQuery _RayQuery(SimpleAccelerationStructure sas, Ray r, float min_t, float max_t)
+VoxelRayQuery _VoxelRayQuery(VoxelAccelerationStructure as, Ray r, float min_t, float max_t)
 {
-	RayQuery RQ;
+	VoxelRayQuery RQ;
 
 	RQ.R = r;
-	RQ.AS = sas;
+	RQ.AS = as;
 	RQ.MinT = min_t;
 	RQ.MaxT = max_t;
 	RQ.HitType = RQ_HIT_NONE;
+	RQ.HitRec = _HitRecord();
 
 	return RQ;
 }
 //----------------------------------------------------------------------------------------
 // 
 //----------------------------------------------------------------------------------------
-bool RayQueryProcess(inout RayQuery rq)
+bool VoxelRayQueryProcess(inout VoxelRayQuery rq)
 {
-	if (SimpleAccelerationStructure_Hit(rq.AS, rq.R, rq.MinT, rq.MaxT, rq.HitRec))
+	if (VoxelAccelerationStructure_Hit(rq.AS, rq.R, rq.MinT, rq.MaxT, rq.HitRec))
+	{
+		rq.HitType = RQ_HIT_OBJECT;
+		return true;
+	}
+	else
+	{
+		rq.HitType = RQ_HIT_NONE;
+		return true;
+	}
+}
+//----------------------------------------------------------------------------------------
+// Brute-force ray query
+//----------------------------------------------------------------------------------------
+bool VoxelRayQueryProcessNoAS(inout VoxelRayQuery rq)
+{
+	if (FastPrmitiveList_Hit(rq.AS, rq.R, rq.MinT, rq.MaxT, rq.HitRec))
 	{
 		rq.HitType = RQ_HIT_OBJECT;
 		return true;
@@ -32,14 +49,14 @@ bool RayQueryProcess(inout RayQuery rq)
 //----------------------------------------------------------------------------------------
 // 
 //----------------------------------------------------------------------------------------
-int RayQueryGetIntersectionType(RayQuery rq)
+int VoxelRayQueryGetIntersectionType(VoxelRayQuery rq)
 {
 	return rq.HitType;
 }
 //----------------------------------------------------------------------------------------
 // 
 //----------------------------------------------------------------------------------------
-float RayQueryGetIntersectionT(RayQuery rq)
+float VoxelRayQueryGetIntersectionT(VoxelRayQuery rq)
 {
 	return rq.HitRec.t;
 }
