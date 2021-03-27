@@ -49,7 +49,7 @@ This sample demonstrates how to use ray query in fragment shader to render shado
 
 
 ## Voxel Ray Tracer 
-This sample demonstrates how to build BVH tree and use it in compute shader to speed up scene traversal. This sample uses voxel scene to simplify the BVH building procedure.  
+This sample demonstrates how to build a simple BVH tree and use it in compute shader to speed up scene traversal. This sample uses voxel scene to simplify the BVH building procedure.  
 
 ### With BVH
 
