@@ -283,6 +283,7 @@ bool Fast_AABB_Hit(Ray r, AABB aabb, Material m, float t_min, inout float t_max,
 {
 	float MinT;
 	float MaxT;
+	float T;
 
 	float3 t0 = (aabb.Min - r.Orig) * r.InvDir;
 	float3 t1 = (aabb.Max - r.Orig) * r.InvDir;
@@ -290,34 +291,34 @@ bool Fast_AABB_Hit(Ray r, AABB aabb, Material m, float t_min, inout float t_max,
 	MinT = max(max(min(t0.x, t1.x), min(t0.y, t1.y)), min(t0.z, t1.z));
 	MaxT = min(min(max(t0.x, t1.x), max(t0.y, t1.y)), max(t0.z, t1.z));
 
-	/*if (MaxT < 0)
-	{
-		return false;
-	}*/
-
-	if (MinT > MaxT)
+	if (MinT > MaxT || MaxT < 0)
 	{
 		return false;
 	}
 
-	if (MinT < t_min || MinT > t_max)
+	if (MinT < 0) // ray origin is inside AABB so hit position at MaxT
+		T = MaxT;
+	else
+		T = MinT;
+
+	if (T < t_min || T > t_max)
 		return false;
-		
-	t_max = MinT;
-	rec.t = MinT;
-	rec.P = Ray_At(r, rec.t);
+
+	t_max = T;
+	rec.t = T;
+	rec.P = Ray_At(r, T);
 	
-	if (MinT == t0.z && dot(-r.Dir, float3(0, 0, -1)) > 0)
+	if (T == t0.z && dot(r.Dir, float3(0, 0, 1)) > 0)
 		rec.Normal = float3(0, 0, -1);
-	else if (MinT == t1.z && dot(-r.Dir, float3(0, 0, 1)) > 0)
+	else if (T == t1.z && dot(r.Dir, float3(0, 0, -1)) > 0)
 		rec.Normal = float3(0, 0, 1);
-	else if (MinT == t0.y && dot(-r.Dir, float3(0, -1, 0)) > 0)
+	else if (T == t0.y && dot(r.Dir, float3(0, 1, 0)) > 0)
 		rec.Normal = float3(0, -1, 0);
-	else if (MinT == t1.y && dot(-r.Dir, float3(0, 1, 0)) > 0)
+	else if (T == t1.y && dot(r.Dir, float3(0, -1, 0)) > 0)
 		rec.Normal = float3(0, 1, 0);
-	else if (MinT == t0.x && dot(-r.Dir, float3(-1, 0, 0)) > 0)
+	else if (T == t0.x && dot(r.Dir, float3(1, 0, 0)) > 0)
 		rec.Normal = float3(-1, 0, 0);
-	else if (MinT == t1.x && dot(-r.Dir, float3(1, 0, 0)) > 0)
+	else if (T == t1.x && dot(r.Dir, float3(-1, 0, 0)) > 0)
 		rec.Normal = float3(1, 0, 0);
 
 	rec.Material = m;	
