@@ -10,6 +10,9 @@ This project collects multiple compute shader based ray tracing samples for Unit
 - Hybrid Ambient Occlusion (upcoming)
 - Hybrid Reflection and Refraction (upcoming)
 
+# Acknowledge
+The voxel model in this project is created by [MagicaVoxel](https://ephtracy.github.io/index.html?page=mv_main).
+
 # Samples
 
 ## Ray Tracing in One Weekend 
